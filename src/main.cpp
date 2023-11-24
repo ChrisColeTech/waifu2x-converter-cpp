@@ -456,6 +456,15 @@ struct ConvInfo {
 		};
 };
 
+#include <filesystem>
+
+_tstring generate_output_filename(const _tstring& outputPath, const _tstring& inputFileName) {
+	std::filesystem::path inputPath(inputFileName);
+	_tstring outputFileName = outputPath + inputPath.filename().wstring();
+	return outputFileName;
+}
+
+
 
 _tstring generate_output_location(
 	const _tstring origPath,
@@ -466,83 +475,8 @@ _tstring generate_output_location(
 	int outputOption
 )
 {
-	size_t lastSlashPos = outputFileName.find_last_of(_T("/\\"));
-	size_t lastDotPos = outputFileName.find_last_of(_T('.'));
-
-	if (_tcscmp(outputFileName.c_str(), _T("auto")) == 0)
-	{
-		outputFileName = inputFileName;
-		
-		size_t tailDot = outputFileName.find_last_of(_T('.'));
-		if (tailDot != _tstring::npos)
-		{
-			outputFileName.erase(tailDot, outputFileName.length());
-		}
-		
-		if (outputOption & OUTPUT_RECURSIVE)
-		{
-			outputFileName = outputFileName + postfix;
-		}
-		
-		outputFileName = outputFileName + _T(".") + outputFormat;
-	}	
-	else if (outputFileName.back() == _T('/') || outputFileName.back() == _T('\\'))
-	{
-		if (outputOption & OUTPUT_SUBDIR && inputFileName.find(origPath) != _tstring::npos)
-		{
-			_tstring relative = inputFileName.substr(origPath.length()+1);
-			outputFileName += relative.substr(0, relative.find_last_of(_T("/\\"))+1);
-		}
-		
-		//outputFileName = output folder or "auto/"
-		if (!fs::is_directory(outputFileName))
-		{
-			fs::create_directories(outputFileName);
-		}
-		
-		//We pass tmp into generate_output_location because we will use the default way of naming processed files.
-		//We will remove everything, in the tmp string, prior to the last slash to get the filename.
-		//This removes all contextual information about where a file originated from if "recursive_directory" was enabled.
-		_tstring tmp;
-		if (outputOption & OUTPUT_RECURSIVE)
-		{
-			tmp = generate_output_location(origPath, inputFileName, _T("auto"), postfix, outputFormat, outputOption);
-		}
-		else
-		{
-			tmp = inputFileName;
-			size_t tailDot = tmp.find_last_of(_T('.'));
-			if (tailDot != _tstring::npos)
-			{
-				tmp.erase(tailDot, tmp.length());
-			}
-			tmp = tmp + _T(".") + outputFormat;
-		}
-	
-		//tmp = full formatted output file path
-		size_t lastSlash = tmp.find_last_of(_T("/\\"));
-		if (lastSlash != _tstring::npos)
-		{
-			tmp.erase(0, lastSlash+1);
-		}
-		
-		outputFileName += tmp;
-	}
-	else if (lastDotPos == _tstring::npos || lastSlashPos != _tstring::npos && lastDotPos < lastSlashPos)
-	{
-		//e.g. ./test.d/out needs to be changed to ./test.d/out.png
-		outputFileName += _T(".") + outputFormat;
-	}
-	else if (lastSlashPos == _tstring::npos || lastDotPos > lastSlashPos)
-	{
-		//We may have a regular output file here or something went wrong.
-		//outputFileName is already what it should be thus nothing needs to be done.
-	}
-	else
-	{
-		throw std::runtime_error("An unknown 'outputFileName' has been inserted into generate_output_location.");
-	}
-	return outputFileName;
+	_tstring outputFilename = generate_output_filename(outputFileName, inputFileName);
+	return outputFilename;
 }
 
 void convert_file(ConvInfo info, fs::path inputName, _tstring outputName)

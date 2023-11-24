@@ -15,9 +15,7 @@ waifu2x-converter-cpp
 *.s
 *.ii
 perf.data*
-*.dll
 *.obj
-*.exe
 src/modelHandler_OpenCL.cl.h
 src/modelHandler_CUDA.ptx.h
 *.ptx*
@@ -42,3 +40,4 @@ runtest
 *.isa
 *.il
 .gdbinit
+.vs/
